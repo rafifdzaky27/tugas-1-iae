@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metropolitan Museum Explorer</title>
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        header {
+            background-color: #C21E56;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .search-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .search-section h2 {
+            margin-bottom: 1rem;
+            color: #C21E56;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        button {
+            background-color: #C21E56;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #9E1946;
+        }
+        
+        .departments-section {
+            margin-bottom: 2rem;
+        }
+        
+        .departments-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .department-item {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .department-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .results-section {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .artwork-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .artwork-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .artwork-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-color: #f0f0f0;
+        }
+        
+        .artwork-info {
+            padding: 1.5rem;
+        }
+        
+        .artwork-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .artwork-artist {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+        }
+        
+        .artwork-date {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .artwork-dept {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .error {
+            background-color: #ffecec;
+            color: #d83a3a;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal {
+            background-color: white;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            background-color: #C21E56;
+            color: white;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        
+        .modal-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .modal-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Metropolitan Museum of Art Explorer</h1>
+        <p>Discover thousands of years of art from around the world</p>
+    </header>
+    
+    <div class="container">
+        <section class="search-section">
+            <h2>Search Art Collection</h2>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search by keyword, artist, title...">
+                <button id="search-button">Search</button>
+            </div>
+            <div id="search-error" class="error" style="display: none;"></div>
+        </section>
+        
+        <section class="departments-section">
+            <h2>Browse by Department</h2>
+            <div id="departments-list" class="departments-list">
+                <div class="loading">Loading departments...</div>
+            </div>
+        </section>
+        
+        <section class="results-section">
+            <h2 id="results-title">Featured Artworks</h2>
+            <div id="results-loading" class="loading">Loading artworks...</div>
+            <div id="results-error" class="error" style="display: none;"></div>
+            <div id="results-grid" class="results-grid"></div>
+            <div class="pagination" id="pagination"></div>
+        </section>
+    </div>
+    
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Artwork Details</h2>
+                <button class="close-modal" id="close-modal">×</button>
+            </div>
+            <div class="modal-content" id="modal-content">
+                <!-- Content will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API URLs
+        const BASE_URL = 'https://collectionapi.metmuseum.org/public/collection/v1';
+        const OBJECTS_URL = `${BASE_URL}/objects`;
+        const DEPARTMENTS_URL = `${BASE_URL}/departments`;
+        const SEARCH_URL = `${BASE_URL}/search`;
+        
+        // DOM elements
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const searchError = document.getElementById('search-error');
+        const departmentsList = document.getElementById('departments-list');
+        const resultsTitle = document.getElementById('results-title');
+        const resultsLoading = document.getElementById('results-loading');
+        const resultsError = document.getElementById('results-error');
+        const resultsGrid = document.getElementById('results-grid');
+        const pagination = document.getElementById('pagination');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const modalTitle = document.getElementById('modal-title');
+        const modalContent = document.getElementById('modal-content');
+        const closeModal = document.getElementById('close-modal');
+        
+        // State variables
+        let currentObjectIds = [];
+        let currentPage = 1;
+        const itemsPerPage = 12;
+        let isLoading = false;
+        
+        // Fetch departments on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDepartments();
+            fetchRandomObjects();
+            
+            // Event listeners
+            searchButton.addEventListener('click', handleSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            
+            closeModal.addEventListener('click', () => {
+                modalOverlay.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.style.display = 'none';
+                }
+            });
+        });
+        
+        // Fetch departments from the API
+        async function fetchDepartments() {
+            try {
+                const response = await fetch(DEPARTMENTS_URL);
+                if (!response.ok) throw new Error('Failed to fetch departments');
+                
+                const data = await response.json();
+                displayDepartments(data.departments);
+            } catch (error) {
+                console.error('Error fetching departments:', error);
+                departmentsList.innerHTML = `<div class="error">Failed to load departments: ${error.message}</div>`;
+            }
+        }
+        
+        // Display departments as clickable items
+        function displayDepartments(departments) {
+            departmentsList.innerHTML = '';
+            
+            departments.forEach(dept => {
+                const deptElement = document.createElement('div');
+                deptElement.classList.add('department-item');
+                deptElement.textContent = dept.displayName;
+                deptElement.addEventListener('click', () => {
+                    searchByDepartment(dept.departmentId);
+                });
+                
+                departmentsList.appendChild(deptElement);
+            });
+        }
+        
+        // Fetch random objects for the initial view
+        async function fetchRandomObjects() {
+            try {
+                resultsLoading.style.display = 'block';
+                resultsGrid.innerHTML = '';
+                resultsError.style.display = 'none';
+                
+                // We'll fetch a broad search with hasImages=true to get only objects with images
+                const response = await fetch(`${SEARCH_URL}?q=art&hasImages=true`);
+                if (!response.ok) throw new Error('Failed to fetch objects');
+                
+                const data = await response.json();
+                const objectIds = data.objectIDs || [];
+                
+                // Get a random sample of objects
+                const randomIds = getRandomSample(objectIds, 24);
+                
+                if (randomIds.length === 0) {
+                    resultsTitle.textContent = 'No artworks found';
+                    resultsLoading.style.display = 'none';
+                    return;
+                }
+                
+                currentObjectIds = randomIds;
+                resultsTitle.textContent = 'Featured Artworks';
+                
+                displayPagination();
+                await fetchAndDisplayObjects(randomIds.slice(0, itemsPerPage));
+                
+            } catch (error) {
+                console.error('Error fetching random objects:', error);
+                resultsError.textContent = `Failed to load artworks: ${error.message}`;
+                resultsError.style.display = 'block';
+                resultsLoading.style.display = 'none';
+            }
+        }
+        
+        // Get a random sample from an array
+        function getRandomSample(array, size) {
+            const shuffled = [...array].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, size);
+        }
+        
+        // Handle the search functionality
+        async function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                searchError.textContent = 'Please enter a search term';
+                searchError.style.display = 'block';
+                return;
+            }
+            
+            searchError.style.display = 'none';
+            resultsLoading.style.display = 'block';
+            resultsGrid.innerHTML = '';
+            resultsError.style.display = 'none';
+            
+            try {
+                // Add the hasImages=true parameter to only get artworks with images
+                const response = await fetch(`${SEARCH_URL}?q=${encodeURIComponent(query)}&hasImages=true`);
+                if (!response.ok) throw new Error('Failed to fetch search results');
+                
+                const data = await response.json();
+                const objectIds = data.objectIDs || [];
+                
+                if (objectIds.length === 0) {
+                    resultsTitle.textContent = `No results found for "${query}"`;
+                    resultsLoading.style.display = 'none';
+                    return;
+                }
+                
+                currentObjectIds = objectIds;
+                currentPage = 1;
+                resultsTitle.textContent = `Search results for "${query}"`;
+                
+                displayPagination();
+                await fetchAndDisplayObjects(objectIds.slice(0, itemsPerPage));
+                
+            } catch (error) {
+                console.error('Error searching objects:', error);
+                resultsError.textContent = `Search failed: ${error.message}`;
+                resultsError.style.display = 'block';
+                resultsLoading.style.display = 'none';
+            }
+        }
+        
+        // Search by department ID
+        async function searchByDepartment(departmentId) {
+            resultsLoading.style.display = 'block';
+            resultsGrid.innerHTML = '';
+            resultsError.style.display = 'none';
+            
+            try {
+                // First, get the department name for the title
+                let departmentName = 'Department';
+                try {
+                    const deptResponse = await fetch(DEPARTMENTS_URL);
+                    if (deptResponse.ok) {
+                        const deptData = await deptResponse.json();
+                        const department = deptData.departments.find(d => d.departmentId === departmentId);
+                        if (department) {
+                            departmentName = department.displayName;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error fetching department name:', err);
+                }
+                
+                // Use search API with departmentId and hasImages=true to get only objects with images
+                const response = await fetch(`${SEARCH_URL}?departmentId=${departmentId}&hasImages=true`);
+                if (!response.ok) throw new Error('Failed to fetch department objects');
+                
+                const data = await response.json();
+                const objectIds = data.objectIDs || [];
+                
+                if (objectIds.length === 0) {
+                    resultsTitle.textContent = `No artworks found in ${departmentName}`;
+                    resultsLoading.style.display = 'none';
+                    return;
+                }
+                
+                // Get a random sample if there are too many results
+                const sampleIds = objectIds.length > 100 ? getRandomSample(objectIds, 100) : objectIds;
+                
+                currentObjectIds = sampleIds;
+                currentPage = 1;
+                resultsTitle.textContent = `Artworks in ${departmentName}`;
+                
+                displayPagination();
+                await fetchAndDisplayObjects(sampleIds.slice(0, itemsPerPage));
+                
+            } catch (error) {
+                console.error('Error fetching department objects:', error);
+                resultsError.textContent = `Failed to load department artworks: ${error.message}`;
+                resultsError.style.display = 'block';
+                resultsLoading.style.display = 'none';
+            }
+        }
+        
+        // Fetch object details and display them
+        async function fetchAndDisplayObjects(objectIds) {
+            if (!objectIds || objectIds.length === 0) {
+                resultsError.textContent = 'No artwork IDs to display';
+                resultsError.style.display = 'block';
+                resultsLoading.style.display = 'none';
+                return;
+            }
+            
+            resultsLoading.style.display = 'block';
+            resultsGrid.innerHTML = '';
+            resultsError.style.display = 'none';
+            
+            // Provide user feedback
+            resultsLoading.textContent = `Loading ${objectIds.length} artworks...`;
+            
+            try {
+                // Limit concurrent requests to avoid overloading the API
+                const batchSize = 5;
+                const allObjects = [];
+                
+                for (let i = 0; i < objectIds.length; i += batchSize) {
+                    const batch = objectIds.slice(i, i + batchSize);
+                    resultsLoading.textContent = `Loading artworks... (${i}/${objectIds.length})`;
+                    
+                    const fetchPromises = batch.map(id => 
+                        fetch(`${OBJECTS_URL}/${id}`)
+                            .then(response => {
+                                if (!response.ok) throw new Error(`Failed to fetch object ${id}`);
+                                return response.json();
+                            })
+                            .catch(error => {
+                                console.error(`Error fetching object ${id}:`, error);
+                                return null;
+                            })
+                    );
+                    
+                    const batchResults = await Promise.all(fetchPromises);
+                    allObjects.push(...batchResults.filter(obj => obj !== null));
+                }
+                
+                if (allObjects.length === 0) {
+                    resultsError.textContent = 'Failed to load any artwork details';
+                    resultsError.style.display = 'block';
+                } else {
+                    displayObjects(allObjects);
+                    
+                    // Show a message if we loaded fewer items than expected
+                    if (allObjects.length < objectIds.length) {
+                        const missingCount = objectIds.length - allObjects.length;
+                        const warningDiv = document.createElement('div');
+                        warningDiv.className = 'error';
+                        warningDiv.style.gridColumn = '1/-1';
+                        warningDiv.textContent = `Note: ${missingCount} artwork(s) could not be loaded`;
+                        resultsGrid.appendChild(warningDiv);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error fetching objects:', error);
+                resultsError.textContent = `Failed to load artwork details: ${error.message}`;
+                resultsError.style.display = 'block';
+            } finally {
+                resultsLoading.style.display = 'none';
+            }
+        }
+        
+        // Display objects in the grid
+        function displayObjects(objects) {
+            resultsGrid.innerHTML = '';
+            
+            let displayedCount = 0;
+            
+            objects.forEach(obj => {
+                // Check if image exists and is a valid URL
+                const hasValidImage = (obj.primaryImageSmall && obj.primaryImageSmall.startsWith('http')) || 
+                                      (obj.primaryImage && obj.primaryImage.startsWith('http'));
+                
+                // Skip artworks without images
+                if (!hasValidImage) return;
+                
+                // Create card only for artworks with images
+                const card = document.createElement('div');
+                card.classList.add('artwork-card');
+                
+                // Use primaryImageSmall if available, otherwise use primaryImage
+                const imageUrl = obj.primaryImageSmall || obj.primaryImage;
+                
+                card.innerHTML = `
+                    <img src="${imageUrl}" alt="${obj.title || 'Artwork'}" class="artwork-image" onerror="this.style.display='none'">
+                    <div class="artwork-info">
+                        <h3 class="artwork-title">${obj.title || 'Untitled'}</h3>
+                        <p class="artwork-artist">${obj.artistDisplayName || 'Unknown Artist'}</p>
+                        <p class="artwork-date">${obj.objectDate || 'Date unknown'}</p>
+                        ${obj.department ? `<span class="artwork-dept">${obj.department}</span>` : ''}
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    displayObjectDetails(obj);
+                });
+                
+                resultsGrid.appendChild(card);
+                displayedCount++;
+            });
+            
+            // If no items were displayed, show a message
+            if (displayedCount === 0) {
+                resultsGrid.innerHTML = '<div class="error" style="grid-column: 1/-1; text-align: center;">No artwork images available to display</div>';
+            }
+        }
+        
+        // Display detailed information about an object in a modal
+        function displayObjectDetails(obj) {
+            modalTitle.textContent = obj.title || 'Artwork Details';
+            
+            // Check if image exists and is a valid URL
+            const hasValidImage = (obj.primaryImage && obj.primaryImage.startsWith('http')) || 
+                                  (obj.primaryImageSmall && obj.primaryImageSmall.startsWith('http'));
+            
+            const imageUrl = hasValidImage ? (obj.primaryImage || obj.primaryImageSmall) : null;
+            
+            let detailsHTML = '';
+            
+            if (imageUrl) {
+                detailsHTML += `<img src="${imageUrl}" alt="${obj.title || 'Artwork'}" class="modal-image" onerror="this.style.display='none'">`;
+            } else {
+                detailsHTML += `<div style="text-align: center; padding: 2rem; background-color: #f5f5f5; margin-bottom: 1.5rem;">
+                    <p style="color: #666;">No image available for this artwork</p>
+                </div>`;
+            }
+            
+            detailsHTML += `<div class="modal-details">`;
+            
+            // Add details if they exist
+            if (obj.artistDisplayName) {
+                detailsHTML += createDetailItem('Artist', obj.artistDisplayName);
+            }
+            
+            if (obj.objectDate) {
+                detailsHTML += createDetailItem('Date', obj.objectDate);
+            }
+            
+            if (obj.medium) {
+                detailsHTML += createDetailItem('Medium', obj.medium);
+            }
+            
+            if (obj.dimensions) {
+                detailsHTML += createDetailItem('Dimensions', obj.dimensions);
+            }
+            
+            if (obj.department) {
+                detailsHTML += createDetailItem('Department', obj.department);
+            }
+            
+            if (obj.culture) {
+                detailsHTML += createDetailItem('Culture', obj.culture);
+            }
+            
+            if (obj.period) {
+                detailsHTML += createDetailItem('Period', obj.period);
+            }
+            
+            if (obj.classification) {
+                detailsHTML += createDetailItem('Classification', obj.classification);
+            }
+            
+            if (obj.creditLine) {
+                detailsHTML += createDetailItem('Credit', obj.creditLine);
+            }
+            
+            if (obj.repository) {
+                detailsHTML += createDetailItem('Repository', obj.repository);
+            }
+            
+            if (obj.objectURL) {
+                detailsHTML += `
+                    <div class="detail-item" style="grid-column: 1 / span 2; margin-top: 1rem;">
+                        <a href="${obj.objectURL}" target="_blank" style="color: #C21E56; text-decoration: none; font-weight: bold;">
+                            View on Metropolitan Museum Website
+                        </a>
+                    </div>
+                `;
+            }
+            
+            detailsHTML += `</div>`;
+            
+            modalContent.innerHTML = detailsHTML;
+            modalOverlay.style.display = 'flex';
+        }
+        
+        // Helper function to create detail items
+        function createDetailItem(label, value) {
+            return `
+                <div class="detail-item">
+                    <div class="detail-label">${label}</div>
+                    <div class="detail-value">${value}</div>
+                </div>
+            `;
+        }
+        
+        // Display pagination controls
+        function displayPagination() {
+            const totalPages = Math.ceil(currentObjectIds.length / itemsPerPage);
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <button class="prev-page" ${currentPage === 1 ? 'disabled' : ''}>
+                    Previous
+                </button>
+            `;
+            
+            // Page info
+            paginationHTML += `
+                <span style="padding: 0.5rem;">
+                    Page ${currentPage} of ${totalPages}
+                </span>
+            `;
+            
+            // Next button
+            paginationHTML += `
+                <button class="next-page" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next
+                </button>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+            
+            // Add event listeners to pagination buttons
+            const prevButton = pagination.querySelector('.prev-page');
+            const nextButton = pagination.querySelector('.next-page');
+            
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        const startIndex = (currentPage - 1) * itemsPerPage;
+                        const endIndex = startIndex + itemsPerPage;
+                        fetchAndDisplayObjects(currentObjectIds.slice(startIndex, endIndex));
+                        displayPagination();
+                        window.scrollTo({top: 0, behavior: 'smooth'});
+                    }
+                });
+            }
+            
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        const startIndex = (currentPage - 1) * itemsPerPage;
+                        const endIndex = startIndex + itemsPerPage;
+                        fetchAndDisplayObjects(currentObjectIds.slice(startIndex, endIndex));
+                        displayPagination();
+                        window.scrollTo({top: 0, behavior: 'smooth'});
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html> 
